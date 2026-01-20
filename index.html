@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Artify 🎨 - AI Art for Kids</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&family=Outfit:wght@100..900&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <!-- Animated Paintbrush Cursor -->
+    <div id="cursor-brush">🎨</div>
+    <div id="cursor-trail"></div>
+
+    <main id="app">
+        <!-- Home Screen -->
+        <section id="home-screen" class="view active">
+            <div class="background-blobs">
+                <div class="blob blob-1"></div>
+                <div class="blob blob-2"></div>
+                <div class="blob blob-3"></div>
+            </div>
+
+            <div class="home-content">
+                <header>
+                    <h1 class="rainbow-text">Artify 🎨</h1>
+                    <p class="subtitle">Where your imagination becomes magic!</p>
+                </header>
+
+                <div class="hero-section">
+                    <button id="create-art-btn" class="pulse-btn">
+                        <span class="btn-icon">✨</span>
+                        <span class="btn-text">Create New Art</span>
+                    </button>
+
+                    <div class="quick-actions">
+                        <button class="action-btn" id="inspiration-btn">
+                            <span class="btn-emoji">💡</span> Inspiration
+                        </button>
+                        <button class="action-btn" id="daily-btn">
+                            <span class="btn-emoji">🏆</span> Daily Challenge
+                        </button>
+                        <button class="action-btn" id="home-gallery-btn">
+                            <span class="btn-emoji">🖼️</span> My Gallery
+                        </button>
+                    </div>
+                </div>
+
+                <div class="recent-creations-section">
+                    <h2>Recent Creations</h2>
+                    <div class="gallery-scroll" id="recent-gallery">
+                        <div class="placeholder-card">
+                            <img src="https://images.unsplash.com/photo-1541701494587-cb58502866ab?q=20&w=200&auto=format&fit=crop"
+                                class="mini-art-placeholder">
+                            <span>Your magic gallery is waiting for its first masterpiece! 🎨</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="daily-card">
+                    <div class="card-badge">Daily Task</div>
+                    <div class="card-info">
+                        <h3>Dinosaur Tea Party 🦖☕</h3>
+                        <p>Can you imagine a T-Rex drinking from a tiny cup?</p>
+                    </div>
+                    <button class="secondary-btn">Try Challenge</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- My Gallery Screen -->
+        <section id="gallery-screen" class="view">
+            <div class="gallery-container">
+                <nav class="studio-nav">
+                    <button class="icon-btn" id="gallery-back-btn">⬅️ Home</button>
+                    <h2>My Art Gallery 🖼️</h2>
+                    <div class="coins-display">💰 <span id="coin-count-gallery">10</span></div>
+                </nav>
+
+                <div class="gallery-controls">
+                    <div class="filter-group">
+                        <button class="filter-btn active">All</button>
+                        <button class="filter-btn">Cartoon</button>
+                        <button class="filter-btn">Watercolor</button>
+                    </div>
+                    <button class="secondary-btn" id="slideshow-btn">🎞️ Slideshow</button>
+                </div>
+
+                <div class="gallery-grid" id="full-gallery">
+                    <!-- Art cards will be injected here -->
+                    <div class="placeholder-grid">
+                        <p>No masterpieces yet! Go create some magic! ✨</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Inspiration & History Corners -->
+        <section id="inspiration-screen" class="view">
+            <div class="corner-container">
+                <button class="icon-btn close-corner">⬅️ Back</button>
+                <div class="corner-header">
+                    <h2>Inspiration Corner 💡</h2>
+                    <p>Stuck? Let's find an idea!</p>
+                </div>
+                <div class="inspiration-tools">
+                    <button id="random-prompt-btn" class="generate-btn">Random Idea! 🧚</button>
+                    <div class="idea-box" id="idea-display">Click the button for magic!</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Creation Studio -->
+        <section id="studio-screen" class="view">
+            <div class="studio-container">
+                <nav class="studio-nav">
+                    <button class="icon-btn" id="back-to-home">⬅️ Home</button>
+                    <h2 class="studio-title">Creation Studio ✨</h2>
+                    <div class="coins-display">💰 <span id="coin-count">10</span></div>
+                </nav>
+
+                <div class="studio-steps">
+                    <!-- Step 1: Prompt Input -->
+                    <div class="step-card">
+                        <div class="step-header">
+                            <span class="step-num">1</span>
+                            <h3>Describe your dream artwork...</h3>
+                        </div>
+                        <div class="prompt-wrapper">
+                            <textarea id="art-prompt" placeholder="A fluffy kitten flying on a rainbow cupcake..."
+                                maxlength="300"></textarea>
+                            <div class="prompt-tools">
+                                <span id="char-count">0 / 300</span>
+                                <button id="enhance-prompt-btn" class="magic-btn">✨ Make it Better!</button>
+                                <button id="voice-btn" class="icon-btn">🎤</button>
+                            </div>
+                        </div>
+                        <div class="prompt-suggestions">
+                            <button class="suggest-btn">A dragon eating ice cream 🍦</button>
+                            <button class="suggest-btn">A magical space cat 🐱‍🚀</button>
+                            <button class="suggest-btn">An underwater city of bubbles 🫧</button>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Style Selector -->
+                    <div class="step-card">
+                        <div class="step-header">
+                            <span class="step-num">2</span>
+                            <h3>Pick a Style!</h3>
+                        </div>
+                        <div class="style-grid" id="style-selector">
+                            <div class="style-card active" data-style="cartoon">
+                                <div class="style-preview cartoon">🎨</div>
+                                <span>Cartoon</span>
+                            </div>
+                            <div class="style-card" data-style="watercolor">
+                                <div class="style-preview watercolor">💧</div>
+                                <span>Watercolor</span>
+                            </div>
+                            <div class="style-card" data-style="pixel">
+                                <div class="style-preview pixel">👾</div>
+                                <span>Pixel Art</span>
+                            </div>
+                            <div class="style-card" data-style="fantasy">
+                                <div class="style-preview fantasy">✨</div>
+                                <span>Fantasy</span>
+                            </div>
+                            <div class="style-card" data-style="sketch">
+                                <div class="style-preview sketch">✏️</div>
+                                <span>Sketch</span>
+                            </div>
+                            <div class="style-card" data-style="space">
+                                <div class="style-preview space">🚀</div>
+                                <span>Space</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Options -->
+                    <div class="step-card">
+                        <div class="step-header">
+                            <span class="step-num">3</span>
+                            <h3>Extra Magic</h3>
+                        </div>
+                        <div class="options-row">
+                            <div class="option-group">
+                                <label>Mood</label>
+                                <select id="mood-selector">
+                                    <option value="happy">Happy 😊</option>
+                                    <option value="mysterious">Mysterious 🔮</option>
+                                    <option value="peaceful">Peaceful 🌿</option>
+                                    <option value="exciting">Exciting 🔥</option>
+                                </select>
+                            </div>
+                            <div class="option-group">
+                                <label>Shape</label>
+                                <div class="ratio-btns">
+                                    <button class="ratio-btn active" data-ratio="square">Square ⬜</button>
+                                    <button class="ratio-btn" data-ratio="portrait">Tall 📱</button>
+                                    <button class="ratio-btn" data-ratio="landscape">Wide 🖼️</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button id="generate-magic-btn" class="generate-btn">
+                        Create Magic! ✨
+                    </button>
+                </div>
+            </div>
+        </section>
+        <!-- Generation Screen (Loading) -->
+        <section id="generation-screen" class="view">
+            <div class="generation-container">
+                <div class="loader-wrapper">
+                    <div class="loader-brush">🖌️</div>
+                    <div class="loader-canvas"></div>
+                </div>
+                <h2 id="progress-message">Mixing colors... 🎨</h2>
+                <p class="loader-hint">Magic takes a little time!</p>
+                <button id="cancel-gen-btn" class="secondary-btn">Cancel Magic</button>
+            </div>
+        </section>
+
+        <!-- Result Screen -->
+        <section id="result-screen" class="view">
+            <div class="result-container">
+                <nav class="studio-nav">
+                    <button class="icon-btn" id="result-back-btn">⬅️ Back</button>
+                    <h2>Your Masterpiece! ✨</h2>
+                    <div class="coins-display">💰 <span id="coin-count-result">11</span></div>
+                </nav>
+
+                <div class="result-display">
+                    <div class="image-frame">
+                        <img id="generated-image" src="" alt="Magic Art">
+                        <div class="watermark">Made with Artify 🎨</div>
+                    </div>
+
+                    <div class="result-actions">
+                        <div class="action-grid">
+                            <button class="result-btn primary" id="save-gallery-btn">❤️ Save to Gallery</button>
+                            <button class="result-btn" id="download-btn">📥 Download</button>
+                            <button class="result-btn" id="edit-prompt-btn">✏️ Edit Prompt</button>
+                            <button class="result-btn" id="generate-again-btn">🔄 Create Again</button>
+                        </div>
+
+                        <div class="rating-box">
+                            <p>How do you like it?</p>
+                            <div class="stars">
+                                <span class="star" data-value="1">⭐</span>
+                                <span class="star" data-value="2">⭐</span>
+                                <span class="star" data-value="3">⭐</span>
+                                <span class="star" data-value="4">⭐</span>
+                                <span class="star" data-value="5">⭐</span>
+                            </div>
+                        </div>
+
+                        <button class="info-btn" id="how-ai-made-it">How did AI make this? 🤔</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slideshow Modal -->
+        <div id="slideshow-modal" class="modal">
+            <div class="slideshow-content">
+                <button class="close-modal">&times;</button>
+                <img id="slideshow-img" src="" alt="Slideshow">
+                <div class="slideshow-controls">
+                    <button id="prev-slide">◀️</button>
+                    <button id="next-slide">▶️</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Explanation Modal -->
+        <div id="info-modal" class="modal">
+            <div class="modal-content">
+                <button class="close-modal">&times;</button>
+                <h3>How the Magic Works ✨</h3>
+                <p>Artify's AI is like a super-smart robot artist! It has looked at millions of pictures and learned how
+                    to combine colors, shapes, and styles to follow your instructions perfectly.</p>
+                <button class="secondary-btn close-modal">Got it!</button>
+            </div>
+        </div>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
