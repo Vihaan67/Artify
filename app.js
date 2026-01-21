@@ -451,7 +451,8 @@ const GenerationEngine = {
         'house': ['https://images.unsplash.com/photo-1518780664697-55e3ad937233?q=80&w=1000&auto=format&fit=crop'],
         'car': ['https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?q=80&w=1000&auto=format&fit=crop'],
         'bird': ['https://images.unsplash.com/photo-1444464666168-49d633b867ad?q=80&w=1000&auto=format&fit=crop'],
-        'flowers': ['https://images.unsplash.com/photo-1490750967868-8866176318b3?q=80&w=1000&auto=format&fit=crop'],
+        'flowers': ['https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?q=80&w=1000&auto=format&fit=crop'],
+        'garden': ['https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?q=80&w=1000&auto=format&fit=crop'],
         'party': ['https://images.unsplash.com/photo-1530103043960-ef38714abb15?q=80&w=1000&auto=format&fit=crop'],
         'jungle': ['https://images.unsplash.com/photo-1501854140801-50d01698950b?q=80&w=1000&auto=format&fit=crop'],
         'rainbow': ['https://images.unsplash.com/photo-1508189860359-750ca04abca5?q=80&w=1000&auto=format&fit=crop']
