@@ -471,11 +471,20 @@ const GenerationEngine = {
         const lowerPrompt = prompt.toLowerCase();
         let selectedUrl = "";
 
-        // Keyword Match
-        for (const [key, urls] of Object.entries(this.themeMap)) {
-            if (lowerPrompt.includes(key)) {
-                selectedUrl = urls[Math.floor(Math.random() * urls.length)];
-                break;
+        // 1. Priority Combinations (Specific Requests)
+        if (lowerPrompt.includes('dragon') && (lowerPrompt.includes('ice cream') || lowerPrompt.includes('cream') || lowerPrompt.includes('cone'))) {
+            // Specific: Dragon + Sweets -> Use a whimsical sweet-themed fantasy image
+            // Using a high-quality colorful fantasy/sweet illustration path
+            selectedUrl = 'https://images.unsplash.com/photo-1576618148400-f54bed99fcf8?q=80&w=1000&auto=format&fit=crop';
+        }
+
+        // 2. Standard Keyword Match (if no combo found)
+        if (!selectedUrl) {
+            for (const [key, urls] of Object.entries(this.themeMap)) {
+                if (lowerPrompt.includes(key)) {
+                    selectedUrl = urls[Math.floor(Math.random() * urls.length)];
+                    break;
+                }
             }
         }
 
