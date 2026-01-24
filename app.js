@@ -74,7 +74,26 @@ function initInspiration() {
         document.getElementById('home-screen').classList.add('active');
     };
 
-    randomBtn.onclick = () => {
+    randomBtn.onclick = async () => {
+        const apiKey = localStorage.getItem('gemini_api_key');
+
+        display.classList.add('pulse');
+        const originalText = display.textContent;
+        display.textContent = "Asking the Magic Brain... 🔮";
+
+        if (apiKey) {
+            // Using the helper function defined at the bottom of the file
+            // Note: callGeminiAPI might return null if failed
+            const aiPrompt = await callGeminiAPI("Generate 1 creative, funny, kid-friendly art prompt (max 12 words) with emojis. Just the text, nothing else.", "You are a creative art muse for children.");
+
+            if (aiPrompt) {
+                display.textContent = aiPrompt.trim();
+                setTimeout(() => display.classList.remove('pulse'), 500);
+                return;
+            }
+        }
+
+        // Fallback Logic (Local List)
         let newIndex;
         // Ensure we don't pick the same index twice in a row
         do {
@@ -85,7 +104,6 @@ function initInspiration() {
         const idea = ideas[newIndex];
 
         display.textContent = idea;
-        display.classList.add('pulse');
         setTimeout(() => display.classList.remove('pulse'), 500);
     };
 }
@@ -97,10 +115,6 @@ function initGallery() {
     const galleryScreen = document.getElementById('gallery-screen');
     const backBtn = document.getElementById('gallery-back-btn');
     const fullGallery = document.getElementById('full-gallery');
-
-    // Trigger from home screen or other places (logic would go here)
-    // For now, let's assume a gallery button on Home
-    // I need to add that button to Home or just use current logic
 
     backBtn.onclick = () => {
         galleryScreen.classList.remove('active');
@@ -166,6 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initInspiration();
     initGallery();
     initDailyChallenge();
+    initSettings();
 });
 
 /**
@@ -371,10 +386,20 @@ function initStudioLogic() {
     });
 }
 
+// Global promise to track generation
+let currentGenerationPromise = null;
+
 function startGeneration() {
     const studioScreen = document.getElementById('studio-screen');
     const genScreen = document.getElementById('generation-screen');
     const progressText = document.getElementById('progress-message');
+
+    // Start Async Generation Logic Immediately
+    const promptValue = document.getElementById('art-prompt').value.trim();
+    const activeStyleCard = document.querySelector('.style-card.active');
+    const selectedStyle = activeStyleCard ? activeStyleCard.dataset.style : 'cartoon';
+
+    currentGenerationPromise = GenerationEngine.generate(promptValue, selectedStyle);
 
     studioScreen.classList.remove('active');
     genScreen.classList.add('active');
@@ -394,16 +419,24 @@ function startGeneration() {
         }
     }, 2500);
 
-    // After 10 seconds, show result
-    setTimeout(() => {
+    // After 10 seconds, resolve and show
+    setTimeout(async () => {
         clearInterval(interval);
-        showResult();
+        try {
+            const url = await currentGenerationPromise;
+            showResult(url, selectedStyle);
+        } catch (e) {
+            console.error("Generation failed:", e);
+            // Fallback
+            showResult('assets/candy_forest.png', selectedStyle);
+        }
     }, 10000);
 
     document.getElementById('cancel-gen-btn').onclick = () => {
         clearInterval(interval);
         genScreen.classList.remove('active');
         studioScreen.classList.add('active');
+        currentGenerationPromise = null; // Cancel/Ignore
     };
 }
 
@@ -467,18 +500,43 @@ const GenerationEngine = {
         'space': 'assets/space_adventure.png'
     },
 
-    generate(prompt, style) {
+    async generate(prompt, style) {
         const lowerPrompt = prompt.toLowerCase();
         let selectedUrl = "";
 
+        // 0. AI Enhanced Matching (If API Key exists)
+        const apiKey = localStorage.getItem('gemini_api_key');
+        if (apiKey) {
+            const themes = Object.keys(this.themeMap).join(', ');
+            // Ask Gemini which existing theme matches best or for a specific Unsplash keyword
+            const bestTheme = await callGeminiAPI(
+                `Analyze this child's art prompt: "${prompt}". 
+                Task 1: If it matches one of these themes deeply, return the THEME NAME: [${themes}].
+                Task 2: If not, return a single, simple, safe, high-quality SEARCH TERM for Unsplash (e.g. "cute panda", "space rocket").
+                Return ONLY the single word or phrase.`,
+                "You are an image classification AI for a kids app."
+            );
+
+            if (bestTheme) {
+                const themeKey = bestTheme.trim().toLowerCase();
+                // Check if it matches a local theme
+                if (this.themeMap[themeKey]) {
+                    const urls = this.themeMap[themeKey];
+                    selectedUrl = urls[Math.floor(Math.random() * urls.length)];
+                } else {
+                    // It's a search term!
+                    // Note: Here we could add a fallback logic if we had a paid API.
+                    // For now, we respect the local themes but allow Gemini to be the "Director" mapping prompts to themes.
+                }
+            }
+        }
+
         // 1. Priority Combinations (Specific Requests)
-        if (lowerPrompt.includes('dragon') && (lowerPrompt.includes('ice cream') || lowerPrompt.includes('cream') || lowerPrompt.includes('cone'))) {
-            // Specific: Dragon + Sweets -> Use a whimsical sweet-themed fantasy image
-            // Using a high-quality colorful fantasy/sweet illustration path
+        if (!selectedUrl && lowerPrompt.includes('dragon') && (lowerPrompt.includes('ice cream') || lowerPrompt.includes('cream') || lowerPrompt.includes('cone'))) {
             selectedUrl = 'https://images.unsplash.com/photo-1576618148400-f54bed99fcf8?q=80&w=1000&auto=format&fit=crop';
         }
 
-        // 2. Standard Keyword Match (if no combo found)
+        // 2. Standard Keyword Match (Fallback)
         if (!selectedUrl) {
             for (const [key, urls] of Object.entries(this.themeMap)) {
                 if (lowerPrompt.includes(key)) {
@@ -488,7 +546,7 @@ const GenerationEngine = {
             }
         }
 
-        // If no keyword match, use a beautiful STYLE-SPECIFIC fallback (Never generic abstract ink!)
+        // 3. Style Fallback
         if (!selectedUrl) {
             selectedUrl = this.styleOverlays[style] || 'assets/candy_forest.png';
         }
@@ -497,23 +555,20 @@ const GenerationEngine = {
     }
 };
 
-function showResult() {
+function showResult(url, style) {
     const genScreen = document.getElementById('generation-screen');
     const resultScreen = document.getElementById('result-screen');
     const resultImg = document.getElementById('generated-image');
-    const promptValue = document.getElementById('art-prompt').value.trim();
-    const activeStyleCard = document.querySelector('.style-card.active');
-    const selectedStyle = activeStyleCard ? activeStyleCard.dataset.style : 'cartoon';
 
     genScreen.classList.remove('active');
     resultScreen.classList.add('active');
 
-    // Use the new Generation Engine
-    resultImg.src = GenerationEngine.generate(promptValue, selectedStyle);
+    // Use the resolved URL
+    resultImg.src = url;
 
     // Apply Magic Style Filter
-    resultImg.className = ''; // Reset
-    resultImg.classList.add(`style-${selectedStyle}`);
+    resultImg.className = '';
+    resultImg.classList.add(`style-${style}`);
 
     initResultLogic();
 }
@@ -603,5 +658,70 @@ function updateRecentGallery() {
             card.innerHTML = `<img src="${art.url}" alt="My Creation">`;
             gallery.appendChild(card);
         });
+    }
+}
+
+/**
+ * Settings & API Logic
+ */
+function initSettings() {
+    const settingsBtn = document.getElementById('settings-btn');
+    const modal = document.getElementById('settings-modal');
+    // If settings button or modal doesn't exist (e.g. old HTML cache), skip
+    if (!settingsBtn || !modal) return;
+
+    const closeBtn = modal.querySelector('.close-modal');
+    const saveBtn = document.getElementById('save-settings-btn');
+    const clearBtn = document.getElementById('clear-data-btn');
+    const input = document.getElementById('api-key-input');
+
+    // Load saved key
+    const savedKey = localStorage.getItem('gemini_api_key');
+    if (savedKey) input.value = savedKey;
+
+    settingsBtn.onclick = () => modal.classList.add('active');
+
+    if (closeBtn) closeBtn.onclick = () => modal.classList.remove('active');
+
+    saveBtn.onclick = () => {
+        const key = input.value.trim();
+        if (key) {
+            localStorage.setItem('gemini_api_key', key);
+            saveBtn.textContent = "Saved! ✅";
+            setTimeout(() => saveBtn.textContent = "Save Settings 💾", 2000);
+            setTimeout(() => modal.classList.remove('active'), 1000);
+        }
+    };
+
+    clearBtn.onclick = () => {
+        if (confirm("Are you sure? This will delete all your art and settings!")) {
+            localStorage.clear();
+            location.reload();
+        }
+    };
+}
+
+async function callGeminiAPI(prompt, systemPrompt = "You are a helpful assistant.") {
+    const key = localStorage.getItem('gemini_api_key');
+    if (!key) return null;
+
+    try {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: systemPrompt + "\n\nUser Request: " + prompt }] }]
+            })
+        });
+        const data = await response.json();
+        if (data.candidates && data.candidates[0] && data.candidates[0].content) {
+            return data.candidates[0].content.parts[0].text;
+        } else {
+            console.error("Gemini API Error: Invalid Response Structure", data);
+            return null;
+        }
+    } catch (e) {
+        console.error("Gemini API Error:", e);
+        return null;
     }
 }

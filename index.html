@@ -45,6 +45,9 @@
                         <button class="action-btn" id="daily-btn">
                             <span class="btn-emoji">🏆</span> Daily Challenge
                         </button>
+                        <button class="action-btn" id="settings-btn">
+                            <span class="btn-emoji">⚙️</span> Settings
+                        </button>
                         <button class="action-btn" id="home-gallery-btn">
                             <span class="btn-emoji">🖼️</span> My Gallery
                         </button>
@@ -287,6 +290,23 @@
                 <p>Artify's AI is like a super-smart robot artist! It has looked at millions of pictures and learned how
                     to combine colors, shapes, and styles to follow your instructions perfectly.</p>
                 <button class="secondary-btn close-modal">Got it!</button>
+            </div>
+        </div>
+
+        <!-- Settings Modal -->
+        <div id="settings-modal" class="modal">
+            <div class="modal-content settings-content">
+                <button class="close-modal">&times;</button>
+                <h3>Settings ⚙️</h3>
+                <div class="setting-group">
+                    <label for="api-key-input">Gemini API Key 🔑</label>
+                    <p class="setting-desc">Enter your key to unlock infinite creativity!</p>
+                    <input type="password" id="api-key-input" placeholder="Paste your API key here...">
+                </div>
+                <div class="settings-actions">
+                    <button id="save-settings-btn" class="primary-btn">Save Settings 💾</button>
+                    <button id="clear-data-btn" class="danger-btn">Reset All Data 🗑️</button>
+                </div>
             </div>
         </div>
     </main>
