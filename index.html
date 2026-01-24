@@ -18,8 +18,28 @@
     <div id="cursor-trail"></div>
 
     <main id="app">
+        <!-- Welcome Screen -->
+        <section id="welcome-screen" class="view active">
+            <div class="welcome-container">
+                <div class="welcome-content">
+                    <h1 class="rainbow-text welcome-title">Welcome to Artify! 🎨</h1>
+                    <p class="welcome-subtitle">Let's start your magical art journey!</p>
+
+                    <div class="welcome-card">
+                        <div class="welcome-emoji">👋</div>
+                        <h2>What's your name?</h2>
+                        <input type="text" id="user-name-input" placeholder="Enter your name..." maxlength="20">
+                        <button id="start-journey-btn" class="pulse-btn">
+                            <span class="btn-icon">✨</span>
+                            <span class="btn-text">Start Creating!</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- Home Screen -->
-        <section id="home-screen" class="view active">
+        <section id="home-screen" class="view">
             <div class="background-blobs">
                 <div class="blob blob-1"></div>
                 <div class="blob blob-2"></div>
@@ -29,7 +49,7 @@
             <div class="home-content">
                 <header>
                     <h1 class="rainbow-text">Artify 🎨</h1>
-                    <p class="subtitle">Where your imagination becomes magic!</p>
+                    <p class="subtitle" id="personalized-greeting">Where your imagination becomes magic!</p>
                 </header>
 
                 <div class="hero-section">
