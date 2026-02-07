@@ -897,7 +897,7 @@ async function callGeminiAPI(prompt, systemPrompt = "You are a helpful assistant
 
 /* --- EURIAI INTEGRATION START --- */
 const EURIAI_API_KEY = "euri-b1854636ecdd0dea996a9c59128110594181c62a0ba91b30d3eeb27eb012c82e";
-const EURIAI_API_URL = "https://api.euron.one/v1/chat/completions";
+const EURIAI_API_URL = "https://api.euron.one/api/v1/euri/chat/completions";
 
 async function generateAIContent(userPrompt) {
     try {
