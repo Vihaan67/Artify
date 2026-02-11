@@ -405,37 +405,13 @@ function initStudioLogic() {
     const charCount = document.getElementById('char-count');
     const enhanceBtn = document.getElementById('enhance-prompt-btn');
     const suggestBtns = document.querySelectorAll('.suggest-btn');
-    const styleCards = document.querySelectorAll('.style-card');
-    const ratioBtns = document.querySelectorAll('.ratio-btn');
-    const generateBtn = document.getElementById('generate-magic-btn');
-
-    // Char count
-    promptArea.addEventListener('input', () => {
-        charCount.textContent = `${promptArea.value.length} / 300`;
-    });
-
-    // Suggestions
-    suggestBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            promptArea.value = btn.textContent;
-            charCount.textContent = `${promptArea.value.length} / 300`;
-        });
-    });
-
-    // Style selection
-    styleCards.forEach(card => {
-        card.addEventListener('click', () => {
-            styleCards.forEach(c => c.classList.remove('active'));
-            card.classList.add('active');
-        });
-    });
-
-    // Ratio selection
-    ratioBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            ratioBtns.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-        });
+    // Generate Button
+    generateBtn.addEventListener('click', () => {
+        if (!promptArea.value) {
+            alert("Describe your dream artwork first! ✨");
+            return;
+        }
+        startGeneration();
     });
 
     // Prompt Enhancer (AI Powered)
@@ -520,13 +496,11 @@ function startGeneration() {
 
     // Start Async Generation Logic Immediately
     const promptValue = document.getElementById('art-prompt').value.trim();
-    const activeStyleCard = document.querySelector('.style-card.active');
-    const selectedStyle = activeStyleCard ? activeStyleCard.dataset.style : 'cartoon';
 
     // Save prompt to history for personalization
     savePromptToHistory(promptValue);
 
-    currentGenerationPromise = GenerationEngine.generate(promptValue, selectedStyle);
+    currentGenerationPromise = GenerationEngine.generate(promptValue);
 
     studioScreen.classList.remove('active');
     genScreen.classList.add('active');
@@ -551,11 +525,12 @@ function startGeneration() {
         clearInterval(interval);
         try {
             const url = await currentGenerationPromise;
-            showResult(url, selectedStyle);
+            showResult(url);
         } catch (e) {
             console.error("Generation failed:", e);
-            // Fallback
-            showResult('assets/candy_forest.png', selectedStyle);
+            // Fallback (Random dynamic placeholder if API fails)
+            const seed = Math.floor(Math.random() * 1000);
+            showResult(`https://pollinations.ai/p/a_magical_and_surreal_art_piece_full_of_colors_and_imagination?width=1024&height=1024&seed=${seed}`);
         }
     }, 10000);
 
@@ -573,78 +548,20 @@ function startGeneration() {
  * Generation Engine (Fotor-Style Mock)
  */
 const GenerationEngine = {
-    themeMap: {
-        // High Priority Environmental/Action Themes
-        'robot': ['assets/robot_pizza.png'],
-        'space': ['assets/space_adventure.png'],
-        'rocket': ['assets/space_adventure.png'],
-        'underwater': ['assets/underwater_library.png'],
-        'ocean': ['assets/underwater_library.png'],
-        'candy': ['assets/candy_forest.png'],
-        'chocolate': ['assets/candy_forest.png'],
-        'gelatin': ['https://images.unsplash.com/photo-1551024601-bec78aea704b?q=80&w=1000&auto=format&fit=crop'],
-        'jello': ['https://images.unsplash.com/photo-1551024601-bec78aea704b?q=80&w=1000&auto=format&fit=crop'],
-        'pirate': ['https://images.unsplash.com/photo-1599420186946-7b6fb4e297f0?q=80&w=1000&auto=format&fit=crop'],
-        'mermaid': ['https://images.unsplash.com/photo-1518020382113-a7e8fc38eac9?q=80&w=1000&auto=format&fit=crop'],
-
-        // Subject Themes (Lower Priority)
-        'pizza': ['assets/robot_pizza.png'],
-        'cat': ['assets/cute_cat.png'],
-        'kitten': ['assets/cute_cat.png'],
-        'dragon': ['assets/magical_dragon.png'],
-        'unicorn': ['https://images.unsplash.com/photo-1550684376-efcbd6e3f031?q=80&w=1000&auto=format&fit=crop'],
-        'dinosaur': ['https://images.unsplash.com/photo-1551244072-5d12893278ab?q=80&w=1000&auto=format&fit=crop'],
-        'superhero': ['https://images.unsplash.com/photo-1531259683007-016a7b3289c7?q=80&w=1000&auto=format&fit=crop'],
-
-        // High-Quality Thematic Art (Remote)
-        'sun': ['https://images.unsplash.com/photo-1590424765067-163f9d37c44e?q=80&w=1000&auto=format&fit=crop'], // Cute sun illustration
-        'moon': ['https://images.unsplash.com/photo-1532693322450-2cb5c511067d?q=80&w=1000&auto=format&fit=crop'], // Dreamy moon
-        'stars': ['https://images.unsplash.com/photo-1506318137071-a8e063b4bcc0?q=80&w=1000&auto=format&fit=crop'],
-        'castle': ['https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=1000&auto=format&fit=crop'],
-        'gelatin': ['https://images.unsplash.com/photo-1551024601-bec78aea704b?q=80&w=1000&auto=format&fit=crop'],
-        'unicorn': ['https://images.unsplash.com/photo-1550684376-efcbd6e3f031?q=80&w=1000&auto=format&fit=crop'],
-        'mermaid': ['https://images.unsplash.com/photo-1518020382113-a7e8fc38eac9?q=80&w=1000&auto=format&fit=crop'],
-        'pirate': ['https://images.unsplash.com/photo-1599420186946-7b6fb4e297f0?q=80&w=1000&auto=format&fit=crop'],
-        'dinosaur': ['https://images.unsplash.com/photo-1551244072-5d12893278ab?q=80&w=1000&auto=format&fit=crop'],
-        'superhero': ['https://images.unsplash.com/photo-1531259683007-016a7b3289c7?q=80&w=1000&auto=format&fit=crop'],
-        'forest': ['https://images.unsplash.com/photo-1441974231531-c6227db76b6e?q=80&w=1000&auto=format&fit=crop'],
-        'beach': ['https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1000&auto=format&fit=crop'],
-        'snow': ['https://images.unsplash.com/photo-1491002052546-bf38f186af56?q=80&w=1000&auto=format&fit=crop'],
-        'house': ['https://images.unsplash.com/photo-1518780664697-55e3ad937233?q=80&w=1000&auto=format&fit=crop'],
-        'car': ['https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?q=80&w=1000&auto=format&fit=crop'],
-        'bird': ['https://images.unsplash.com/photo-1444464666168-49d633b867ad?q=80&w=1000&auto=format&fit=crop'],
-        'flowers': ['https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?q=80&w=1000&auto=format&fit=crop'],
-        'garden': ['https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?q=80&w=1000&auto=format&fit=crop'],
-        'party': ['https://images.unsplash.com/photo-1530103043960-ef38714abb15?q=80&w=1000&auto=format&fit=crop'],
-        'jungle': ['https://images.unsplash.com/photo-1501854140801-50d01698950b?q=80&w=1000&auto=format&fit=crop'],
-        'rainbow': ['https://images.unsplash.com/photo-1508189860359-750ca04abca5?q=80&w=1000&auto=format&fit=crop']
-    },
-
-    styleOverlays: {
-        'cartoon': 'assets/robot_pizza.png', // Clear 3D/Cartoon style
-        'watercolor': 'https://images.unsplash.com/photo-1515405299443-f7a11c884677?q=80&w=1000&auto=format&fit=crop',
-        'pixel': 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=1000&auto=format&fit=crop', // Real pixel scene
-        'sketch': 'https://images.unsplash.com/photo-1525909002-1b05e0c869d8?q=80&w=1000&auto=format&fit=crop',
-        'fantasy': 'assets/magical_dragon.png',
-        'space': 'assets/space_adventure.png'
-    },
-
-    async generate(prompt, style) {
+    async generate(prompt) {
         const lowerPrompt = prompt.toLowerCase();
         let selectedUrl = "";
 
-        // 0. Try Gemini Image Generation First (Priority)
+        // 0. Try Gemini Image Generation First
         const apiKey = localStorage.getItem('gemini_api_key');
         if (apiKey) {
             try {
-                // Step 1: Use Gemini to create a safe, detailed visual description for AI image generation
+                // Expanded visual description call
                 const visualPrompt = await callGeminiAPI(
-                    `Create a detailed, safe, kid-friendly visual description for an AI image generator based on this prompt: "${prompt}". 
-                    Desired Style: ${style}. 
-                    The user's prompt might be simple (e.g. "cat"), so make it magical (e.g. "a fluffy white kitten with big sparkling blue eyes sits on a velvet cushion in a sunlit garden, vibrant watercolor style"). 
-                    Keep it under 40 words. Focus on visual elements, colors, and lighting. 
-                    Output ONLY the description string.`,
-                    "You are an expert prompt engineer for AI image generation."
+                    `Create a detailed, magical, and kid-friendly visual description for an AI image generator based on this prompt: "${prompt}". 
+                    Make it breathtakingly beautiful, vibrant, and artistic. Focus on colors, lighting, and a whimsical atmosphere. 
+                    Keep it under 45 words. Output ONLY the description string.`,
+                    "You are a master artist muse for children."
                 );
 
                 if (visualPrompt) {
@@ -656,35 +573,18 @@ const GenerationEngine = {
                     return selectedUrl;
                 }
             } catch (e) {
-                console.warn("AI Generation Helper failed, falling back to local library.", e);
+                console.warn("AI Generation Helper failed.", e);
             }
         }
 
-        // 1. Priority Combinations (Local Fallback)
-        if (!selectedUrl && lowerPrompt.includes('dragon') && (lowerPrompt.includes('ice cream') || lowerPrompt.includes('cream') || lowerPrompt.includes('cone'))) {
-            selectedUrl = 'https://images.unsplash.com/photo-1576618148400-f54bed99fcf8?q=80&w=1000&auto=format&fit=crop';
-        }
-
-        // 2. Standard Keyword Match (Fallback)
-        if (!selectedUrl) {
-            for (const [key, urls] of Object.entries(this.themeMap)) {
-                if (lowerPrompt.includes(key)) {
-                    selectedUrl = urls[Math.floor(Math.random() * urls.length)];
-                    break;
-                }
-            }
-        }
-
-        // 3. Style Fallback
-        if (!selectedUrl) {
-            selectedUrl = this.styleOverlays[style] || 'assets/candy_forest.png';
-        }
-
-        return selectedUrl;
+        // Fallback: Dynamic high-quality placeholder based on user keywords
+        const encodedFallback = encodeURIComponent(prompt + " magical artistic whimsical colorful");
+        const seed = Math.floor(Math.random() * 1000000);
+        return `https://pollinations.ai/p/${encodedFallback}?width=1024&height=1024&nologo=true&seed=${seed}`;
     }
 };
 
-function showResult(url, style) {
+function showResult(url) {
     const genScreen = document.getElementById('generation-screen');
     const resultScreen = document.getElementById('result-screen');
     const resultImg = document.getElementById('generated-image');
@@ -695,9 +595,8 @@ function showResult(url, style) {
     // Use the resolved URL
     resultImg.src = url;
 
-    // Apply Magic Style Filter
-    resultImg.className = '';
-    resultImg.classList.add(`style-${style}`);
+    // Apply Default Magic Style Filter
+    resultImg.className = 'magic-result';
 
     initResultLogic();
 }
