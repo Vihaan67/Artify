@@ -453,19 +453,28 @@ function initStudioLogic() {
         const apiKey = localStorage.getItem('gemini_api_key');
 
         if (apiKey) {
-            // Use Gemini to rewrite
-            const enhanced = await callGeminiAPI(
-                `Rewrite this art prompt for a kids' drawing to be more magical, descriptive, and fun. Keep it under 25 words. 
-                Original: "${original}"`,
-                "You are a creative artist muse."
-            );
+            try {
+                // Use Gemini to rewrite
+                const enhanced = await callGeminiAPI(
+                    `Rewrite this art prompt for a kids' drawing to be more magical, descriptive, and fun. Keep it under 25 words. 
+                    Original: "${original}"`,
+                    "You are a creative artist muse."
+                );
 
-            if (enhanced) {
-                promptArea.value = enhanced.trim().replace(/^"|"$/g, ''); // Remove quotes if any
-                charCount.textContent = `${promptArea.value.length} / 300`;
-                enhanceBtn.disabled = false;
-                enhanceBtn.textContent = originalText;
-                return;
+                if (enhanced) {
+                    promptArea.value = enhanced.trim().replace(/^"|"$/g, ''); // Remove quotes if any
+                    charCount.textContent = `${promptArea.value.length} / 300`;
+
+                    // Visual feedback for enhancement
+                    promptArea.classList.add('pulse');
+                    setTimeout(() => promptArea.classList.remove('pulse'), 1000);
+
+                    enhanceBtn.disabled = false;
+                    enhanceBtn.textContent = originalText;
+                    return;
+                }
+            } catch (e) {
+                console.error("Enhancer failed:", e);
             }
         }
 
@@ -558,71 +567,7 @@ function startGeneration() {
     };
 }
 
-/**
- * Gemini Image Generation with Imagen API
- */
-async function generateImageWithGemini(prompt, style) {
-    const apiKey = localStorage.getItem('gemini_api_key');
-    if (!apiKey) {
-        console.log('No API key found, using fallback images');
-        return null;
-    }
-
-    try {
-        // Build enhanced prompt with style
-        const styleDescriptions = {
-            'cartoon': 'in a vibrant 3D cartoon style with bold colors and playful characters',
-            'watercolor': 'in a soft watercolor painting style with gentle brushstrokes',
-            'pixel': 'in a retro pixel art style like classic video games',
-            'fantasy': 'in a magical fantasy art style with ethereal lighting and mystical elements',
-            'sketch': 'in a hand-drawn pencil sketch style with artistic shading',
-            'space': 'in a cosmic space art style with stars, nebulas, and vibrant colors'
-        };
-
-        const styleDesc = styleDescriptions[style] || styleDescriptions['cartoon'];
-        const enhancedPrompt = `${prompt} ${styleDesc}. Kid-friendly, colorful, safe for children, high quality digital art.`;
-
-        console.log('Generating image with Gemini Imagen API...');
-
-        // Note: Gemini's Imagen API endpoint (as of 2024)
-        // This uses the generateImages endpoint
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict?key=${apiKey}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                instances: [{
-                    prompt: enhancedPrompt
-                }],
-                parameters: {
-                    sampleCount: 1,
-                    aspectRatio: "1:1",
-                    safetyFilterLevel: "block_most",
-                    personGeneration: "allow_adult"
-                }
-            })
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            console.error('Gemini API Error:', errorData);
-            return null;
-        }
-
-        const data = await response.json();
-
-        // Extract image from response
-        if (data.predictions && data.predictions[0] && data.predictions[0].bytesBase64Encoded) {
-            const base64Image = data.predictions[0].bytesBase64Encoded;
-            return `data:image/png;base64,${base64Image}`;
-        } else {
-            console.error('Unexpected Gemini API response structure:', data);
-            return null;
-        }
-    } catch (error) {
-        console.error('Error generating image with Gemini:', error);
-        return null;
-    }
-}
+// Redundant Imagen function removed in favor of Pollinations.ai flow
 
 /**
  * Generation Engine (Fotor-Style Mock)
@@ -691,35 +636,31 @@ const GenerationEngine = {
         // 0. Try Gemini Image Generation First (Priority)
         const apiKey = localStorage.getItem('gemini_api_key');
         if (apiKey) {
-            console.log('Attempting Gemini image generation...');
-            const geminiImage = await generateImageWithGemini(prompt, style);
-            if (geminiImage) {
-                console.log('Successfully generated image with Gemini!');
-                return geminiImage;
-            }
-            console.log('Gemini generation failed, falling back to local images...');
+            try {
+                // Step 1: Use Gemini to create a safe, detailed visual description for AI image generation
+                const visualPrompt = await callGeminiAPI(
+                    `Create a detailed, safe, kid-friendly visual description for an AI image generator based on this prompt: "${prompt}". 
+                    Desired Style: ${style}. 
+                    The user's prompt might be simple (e.g. "cat"), so make it magical (e.g. "a fluffy white kitten with big sparkling blue eyes sits on a velvet cushion in a sunlit garden, vibrant watercolor style"). 
+                    Keep it under 40 words. Focus on visual elements, colors, and lighting. 
+                    Output ONLY the description string.`,
+                    "You are an expert prompt engineer for AI image generation."
+                );
 
-            // If Gemini fails, try AI-enhanced theme matching
-            const themes = Object.keys(this.themeMap).join(', ');
-            const bestTheme = await callGeminiAPI(
-                `Analyze this child's art prompt: "${prompt}". 
-                Task 1: If it matches one of these themes deeply, return the THEME NAME: [${themes}].
-                Task 2: If not, return a single, simple, safe, high-quality SEARCH TERM for Unsplash (e.g. "cute panda", "space rocket").
-                Return ONLY the single word or phrase.`,
-                "You are an image classification AI for a kids app."
-            );
-
-            if (bestTheme) {
-                const themeKey = bestTheme.trim().toLowerCase();
-                // Check if it matches a local theme
-                if (this.themeMap[themeKey]) {
-                    const urls = this.themeMap[themeKey];
-                    selectedUrl = urls[Math.floor(Math.random() * urls.length)];
+                if (visualPrompt) {
+                    const cleanPrompt = visualPrompt.trim().replace(/^"|"$/g, '');
+                    const encodedPrompt = encodeURIComponent(cleanPrompt);
+                    const seed = Math.floor(Math.random() * 1000000);
+                    selectedUrl = `https://pollinations.ai/p/${encodedPrompt}?width=1024&height=1024&nologo=true&seed=${seed}`;
+                    console.log("AI Generation URL Prepared:", selectedUrl);
+                    return selectedUrl;
                 }
+            } catch (e) {
+                console.warn("AI Generation Helper failed, falling back to local library.", e);
             }
         }
 
-        // 1. Priority Combinations (Specific Requests)
+        // 1. Priority Combinations (Local Fallback)
         if (!selectedUrl && lowerPrompt.includes('dragon') && (lowerPrompt.includes('ice cream') || lowerPrompt.includes('cream') || lowerPrompt.includes('cone'))) {
             selectedUrl = 'https://images.unsplash.com/photo-1576618148400-f54bed99fcf8?q=80&w=1000&auto=format&fit=crop';
         }
@@ -855,34 +796,48 @@ function updateRecentGallery() {
 function initSettings() {
     const settingsBtn = document.getElementById('settings-btn');
     const modal = document.getElementById('settings-modal');
-    // If settings button or modal doesn't exist (e.g. old HTML cache), skip
     if (!settingsBtn || !modal) return;
 
     const closeBtn = modal.querySelector('.close-modal');
     const saveBtn = document.getElementById('save-settings-btn');
     const clearBtn = document.getElementById('clear-data-btn');
     const input = document.getElementById('api-key-input');
+    const status = document.getElementById('settings-status');
 
     // Load saved key
-    const savedKey = localStorage.getItem('euriai_api_key') || EURIAI_API_KEY;
+    const savedKey = localStorage.getItem('gemini_api_key');
     if (savedKey) input.value = savedKey;
 
-    settingsBtn.onclick = () => modal.classList.add('active');
+    settingsBtn.onclick = () => {
+        modal.classList.add('active');
+        status.className = 'status-msg'; // Clear status on open
+        status.textContent = '';
+    };
 
     if (closeBtn) closeBtn.onclick = () => modal.classList.remove('active');
 
     saveBtn.onclick = () => {
         const key = input.value.trim();
+        status.className = 'status-msg'; // Reset status
+
         if (key) {
-            localStorage.setItem('euriai_api_key', key);
+            localStorage.setItem('gemini_api_key', key);
+            status.textContent = "Settings saved! Your magic is ready. ✨";
+            status.classList.add('success');
+
             saveBtn.textContent = "Saved! ✅";
-            setTimeout(() => saveBtn.textContent = "Save Settings 💾", 2000);
-            setTimeout(() => modal.classList.remove('active'), 1000);
+            setTimeout(() => {
+                saveBtn.textContent = "Save Settings 💾";
+                status.classList.remove('success');
+            }, 3000);
+        } else {
+            status.textContent = "Please enter an API key first! 🔑";
+            status.classList.add('error');
         }
     };
 
     clearBtn.onclick = () => {
-        if (confirm("Are you sure? This will delete all your art and settings!")) {
+        if (confirm("Are you sure? This will delete all your art and settings! 🗑️")) {
             localStorage.clear();
             location.reload();
         }
@@ -890,47 +845,42 @@ function initSettings() {
 }
 
 async function callGeminiAPI(prompt, systemPrompt = "You are a helpful assistant.") {
-    console.log("Using Euriai for logic enhancement...");
-    // We reuse generateAIContent which we appended to the bottom
-    return await generateAIContent(`${systemPrompt}\n\nUser Request: ${prompt}`);
-}
+    const key = localStorage.getItem('gemini_api_key');
+    if (!key) {
+        console.warn("No Gemini API key found in localStorage.");
+        return null;
+    }
 
-/* --- EURIAI INTEGRATION START --- */
-const EURIAI_API_KEY = "euri-b1854636ecdd0dea996a9c59128110594181c62a0ba91b30d3eeb27eb012c82e";
-const EURIAI_API_URL = "https://api.euron.one/api/v1/euri/chat/completions";
-
-async function generateAIContent(userPrompt) {
     try {
-        console.log("Calling Euriai API...");
-        const response = await fetch(EURIAI_API_URL, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${EURIAI_API_KEY}`
-            },
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                model: "gpt-4.1-nano",
-                messages: [
-                    { role: "system", content: "You are a creative assistant." },
-                    { role: "user", content: userPrompt }
-                ],
-                temperature: 0.7,
-                max_tokens: 300
+                system_instruction: { parts: [{ text: systemPrompt }] },
+                contents: [{ parts: [{ text: prompt }] }]
             })
         });
 
         if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`Euriai Error ${response.status}: ${errorText}`);
+            const errorData = await response.json();
+            console.error("Gemini API Request Failed:", response.status, errorData);
+            return null;
         }
 
         const data = await response.json();
-        return data.choices[0].message.content;
-
-    } catch (error) {
-        console.error("Failed to generate content:", error);
-        alert("Oops! Something went wrong.");
+        if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts[0]) {
+            return data.candidates[0].content.parts[0].text;
+        } else {
+            console.error("Gemini API Error: Invalid Response Structure", data);
+            return null;
+        }
+    } catch (e) {
+        console.error("Gemini API Network/Fetch Error:", e);
         return null;
     }
 }
-/* --- EURIAI INTEGRATION END --- */
+
+// Initialize Settings immediately
+document.addEventListener('DOMContentLoaded', () => {
+    initSettings();
+});
