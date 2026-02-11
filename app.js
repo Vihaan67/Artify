@@ -629,19 +629,44 @@ function initResultLogic() {
         updateRecentGallery();
     };
 
-    downloadBtn.onclick = () => {
+    downloadBtn.onclick = async () => {
         const url = document.getElementById('generated-image').src;
-        const link = document.createElement('a');
-        link.href = url;
-        link.target = "_blank";
-        link.download = 'artify_masterpiece.png';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-
         const oldText = downloadBtn.textContent;
-        downloadBtn.textContent = "✅ Opening...";
-        setTimeout(() => downloadBtn.textContent = oldText, 2000);
+
+        try {
+            downloadBtn.textContent = "⏳ Preparing...";
+            downloadBtn.disabled = true;
+
+            const response = await fetch(url);
+            const blob = await response.blob();
+            const blobUrl = URL.createObjectURL(blob);
+
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = 'artify_masterpiece.png';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // Clean up the blob URL
+            URL.revokeObjectURL(blobUrl);
+
+            downloadBtn.textContent = "✅ Downloaded!";
+            setTimeout(() => {
+                downloadBtn.textContent = oldText;
+                downloadBtn.disabled = false;
+            }, 2000);
+        } catch (e) {
+            console.error("Download failed:", e);
+            downloadBtn.textContent = "❌ Error downloading";
+            setTimeout(() => {
+                downloadBtn.textContent = oldText;
+                downloadBtn.disabled = false;
+            }, 3000);
+
+            // Fallback: Just open in new tab if fetch fails
+            window.open(url, '_blank');
+        }
     };
 
     againBtn.onclick = () => startGeneration();
