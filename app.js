@@ -100,11 +100,31 @@ function getPromptHistory() {
  * Daily Challenge & Inspiration Logic
  */
 const DailyChallenges = [
-    { title: "Dinosaur Tea Party 🦖☕", prompt: "A T-Rex wearing a tuxedo having tea with a tiny teacup" },
-    { title: "Space Penguin 🐧🚀", prompt: "A cool penguin surfing on a crystalline wave in outer space" },
-    { title: "Candy Castle 🍭🏰", prompt: "A wobbly castle made of jelly and marshmallows in a sugar field" },
-    { title: "Underwater Library 🫧📚", prompt: "Friendly fish reading bubble-books in a glowing coral library" },
-    { title: "Robot Pizza Party 🍕🤖", prompt: "Funny robots sharing a giant pepperoni pizza with sparkly cheese" }
+    {
+        title: "Dinosaur Tea Party 🦖☕",
+        description: "Can you imagine a T-Rex drinking from a tiny cup?",
+        prompt: "A T-Rex wearing a tuxedo having tea with a tiny teacup"
+    },
+    {
+        title: "Space Penguin 🐧🚀",
+        description: "What if a penguin went surfing in the stars?",
+        prompt: "A cool penguin surfing on a crystalline wave in outer space"
+    },
+    {
+        title: "Candy Castle 🍭🏰",
+        description: "A world made of sweets! Who lives here?",
+        prompt: "A wobbly castle made of jelly and marshmallows in a sugar field"
+    },
+    {
+        title: "Underwater Library 🫧📚",
+        description: "Quiet please! Fish are reading bubble-books.",
+        prompt: "Friendly fish reading bubble-books in a glowing coral library"
+    },
+    {
+        title: "Robot Pizza Party 🍕🤖",
+        description: "Beep boop! These robots love cheesy sparkles.",
+        prompt: "Funny robots sharing a giant pepperoni pizza with sparkly cheese"
+    }
 ];
 
 function initDailyChallenge() {
@@ -118,7 +138,7 @@ function initDailyChallenge() {
     const challenge = DailyChallenges[dayIndex];
 
     taskTitle.textContent = challenge.title;
-    taskDesc.textContent = "Can you bring this magical idea to life?";
+    taskDesc.textContent = challenge.description;
 
     const startChallenge = () => {
         document.getElementById('home-screen').classList.remove('active');
