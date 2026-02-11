@@ -405,6 +405,21 @@ function initStudioLogic() {
     const charCount = document.getElementById('char-count');
     const enhanceBtn = document.getElementById('enhance-prompt-btn');
     const suggestBtns = document.querySelectorAll('.suggest-btn');
+    const generateBtn = document.getElementById('generate-magic-btn');
+
+    // Char count
+    promptArea.addEventListener('input', () => {
+        charCount.textContent = `${promptArea.value.length} / 300`;
+    });
+
+    // Suggestions
+    suggestBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            promptArea.value = btn.textContent;
+            charCount.textContent = `${promptArea.value.length} / 300`;
+        });
+    });
+
     // Generate Button
     generateBtn.addEventListener('click', () => {
         if (!promptArea.value) {
@@ -456,15 +471,6 @@ function initStudioLogic() {
 
         // Fallback (Local Logic)
         setTimeout(() => {
-            const lowerPrompt = original.toLowerCase();
-            let additions = [];
-
-            // Context-aware modifiers
-            if (lowerPrompt.includes('cat') || lowerPrompt.includes('kitten')) additions.push('fluffy', 'big sparkling eyes');
-            if (lowerPrompt.includes('dragon')) additions.push('mythical', 'breathing colorful smoke');
-            // ... (keep existing fallback logic briefly or just simplify)
-            // For brevity in diff, I'll use a simpler fallback here if allowed, or keep the complex one.
-            // I'll keep a simplified version of the previous logic to ensure it still works without key.
             const generics = ['vivid colors', 'magical atmosphere', 'whimsical details', 'masterpiece quality'];
             const randomGeneric = generics[Math.floor(Math.random() * generics.length)];
 
@@ -474,15 +480,6 @@ function initStudioLogic() {
             enhanceBtn.disabled = false;
             enhanceBtn.textContent = originalText;
         }, 800);
-    });
-
-    // Generate Button
-    generateBtn.addEventListener('click', () => {
-        if (!promptArea.value) {
-            alert("Describe your dream artwork first! ✨");
-            return;
-        }
-        startGeneration();
     });
 }
 
@@ -779,7 +776,3 @@ async function callGeminiAPI(prompt, systemPrompt = "You are a helpful assistant
     }
 }
 
-// Initialize Settings immediately
-document.addEventListener('DOMContentLoaded', () => {
-    initSettings();
-});
